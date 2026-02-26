@@ -1,127 +1,343 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>One-Shot Combat Commander</title>
+<title>One-Shot Combat Commander: Gothic Overlord</title>
 <link rel="manifest" href="manifest.json">
+
 <style>
+/* -------------------- Dark Gothic UI -------------------- */
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0f0f14;
-  color: #f5f5f5;
+    margin: 0;
+    font-family: "Arial", sans-serif;
+    background: #0b0b10;
+    color: #f0f0f0;
 }
-
 header {
-  background: #1c1c26;
-  padding: 15px;
-  text-align: center;
-  font-size: 20px;
-  letter-spacing: 2px;
-  border-bottom: 2px solid crimson;
+    background: #1a1a25;
+    padding: 15px;
+    text-align: center;
+    font-size: 22px;
+    border-bottom: 3px solid crimson;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px #ff0000;
 }
-
-button {
-  background: crimson;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  margin: 5px 0;
-  border-radius: 6px;
+nav {
+    display: flex;
+    overflow-x: auto;
+    background: #14141c;
+    border-bottom: 2px solid crimson;
 }
-
+nav button {
+    flex:1;
+    background:none;
+    border:none;
+    color:white;
+    padding:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+nav button.active {
+    background: crimson;
+    text-shadow: 0 0 4px gold;
+}
+.tab {
+    display:none;
+    padding:10px;
+}
 .card {
-  background: #1a1a22;
-  margin: 10px;
-  padding: 10px;
-  border-left: 4px solid crimson;
-  border-radius: 8px;
+    background:#1a1a22;
+    margin:8px 0;
+    padding:10px;
+    border-left:4px solid crimson;
+    border-radius:8px;
+    box-shadow: 0 0 8px #ff0000;
+    transition: 0.2s all;
 }
-
 .current {
-  border-left: 4px solid gold;
+    border-left:4px solid gold;
+    box-shadow: 0 0 12px gold;
 }
-
-input {
-  width: 90%;
-  margin: 5px 0;
-  padding: 6px;
-  background: #121217;
-  border: 1px solid #333;
-  color: white;
+.bloodied {
+    background:#2b1111;
+}
+.dead {
+    background:#111;
+    text-decoration: line-through;
+    opacity:0.5;
+}
+button {
+    background: crimson;
+    border:none;
+    color:white;
+    padding:5px 8px;
+    margin:3px;
+    border-radius:5px;
+    cursor:pointer;
+}
+input, select, textarea {
+    width:95%;
+    margin:4px 0;
+    padding:6px;
+    background:#111;
+    border:1px solid #333;
+    color:white;
+}
+textarea {
+    height:120px;
+}
+.hp-bar {
+    height:10px;
+    border-radius:5px;
+    background:#222;
+    margin:3px 0;
+}
+.hp-fill {
+    height:100%;
+    border-radius:5px;
+    background: crimson;
+    transition: width 0.3s ease-in-out;
+}
+/* Condition icons */
+.condition {
+    display:inline-block;
+    width:18px;
+    height:18px;
+    margin:1px;
+    border-radius:50%;
+    background: #333;
+    text-align:center;
+    line-height:18px;
+    font-size:12px;
+    cursor:pointer;
+    color:white;
+    font-weight:bold;
 }
 </style>
 </head>
+
 <body>
+<header>⚔ One-Shot Combat Commander: Gothic Overlord</header>
 
-<header>⚔ One-Shot Combat Commander</header>
+<nav>
+<button onclick="openTab('combat')" class="active">Combat</button>
+<button onclick="openTab('players')">Players</button>
+<button onclick="openTab('enemies')">Enemies</button>
+<button onclick="openTab('boss')">Boss</button>
+<button onclick="openTab('dice')">Dice</button>
+<button onclick="openTab('notes')">Notes</button>
+<button onclick="openTab('stats')">Stats</button>
+</nav>
 
-<div style="padding:10px;">
-<h3>Add Creature</h3>
-<input id="name" placeholder="Name">
-<input id="hp" type="number" placeholder="HP">
-<input id="ac" type="number" placeholder="AC">
-<button onclick="addCreature()">Add</button>
-</div>
-
-<div style="padding:10px;">
+<!-- -------------------- COMBAT TAB -------------------- -->
+<div id="combat" class="tab" style="display:block">
+<h3>Initiative Order</h3>
 <button onclick="nextTurn()">Next Turn</button>
-<h3>Round: <span id="round">1</span></h3>
+<h4>Round: <span id="round">1</span></h4>
+<div id="initiativeList"></div>
+<p>Combat Timer: <span id="combatTimer">00:00</span></p>
 </div>
 
-<div id="creatures"></div>
+<!-- -------------------- PLAYERS -------------------- -->
+<div id="players" class="tab">
+<h3>Add Player</h3>
+<input id="p_name" placeholder="Name">
+<input id="p_hp" type="number" placeholder="HP">
+<input id="p_ac" type="number" placeholder="AC">
+<input id="p_pp" type="number" placeholder="Passive Perception">
+<button onclick="addPlayer()">Add Player</button>
+<div id="playerList"></div>
+</div>
+
+<!-- -------------------- ENEMIES -------------------- -->
+<div id="enemies" class="tab">
+<h3>Add Enemy</h3>
+<input id="e_name" placeholder="Name">
+<input id="e_hp" type="number" placeholder="HP">
+<input id="e_ac" type="number" placeholder="AC">
+<input id="e_init" type="number" placeholder="Initiative">
+<button onclick="addEnemy()">Add Enemy</button>
+<div id="enemyList"></div>
+</div>
+
+<!-- -------------------- BOSS -------------------- -->
+<div id="boss" class="tab">
+<h3>Boss Controls</h3>
+<input id="legendary" type="number" placeholder="Legendary Actions">
+<input id="resist" type="number" placeholder="Legendary Resistances">
+<input id="lair" type="text" placeholder="Lair Action Reminder">
+<input id="phase" type="number" placeholder="Phase HP % Alert">
+<button onclick="setBoss()">Set Boss Stats</button>
+<div id="bossPanel"></div>
+</div>
+
+<!-- -------------------- DICE -------------------- -->
+<div id="dice" class="tab">
+<h3>Dice Roller</h3>
+<select id="diceType">
+<option value="20">d20</option>
+<option value="12">d12</option>
+<option value="10">d10</option>
+<option value="8">d8</option>
+<option value="6">d6</option>
+<option value="4">d4</option>
+</select>
+<input id="modifier" type="number" placeholder="Modifier">
+<label><input type="checkbox" id="adv">Advantage</label>
+<label><input type="checkbox" id="dis">Disadvantage</label>
+<button onclick="rollDice()">Roll</button>
+<h2 id="diceResult"></h2>
+<div id="diceHistory"></div>
+</div>
+
+<!-- -------------------- NOTES -------------------- -->
+<div id="notes" class="tab">
+<h3>Session Notes</h3>
+<textarea id="sessionNotes"></textarea>
+<button onclick="saveNotes()">Save Notes</button>
+</div>
+
+<!-- -------------------- STATS -------------------- -->
+<div id="stats" class="tab">
+<h3>Session Stats</h3>
+<p>Total Rounds: <span id="statRounds">1</span></p>
+<p>Total Creatures: <span id="statCreatures">0</span></p>
+<p>Legendary Actions Used: <span id="statLegendary">0</span></p>
+<p>Combat Duration: <span id="statTime">00:00</span></p>
+</div>
 
 <script>
+// -------------------- Global Variables --------------------
 let creatures = [];
 let turn = 0;
 let round = 1;
+let boss = {legendary:0,resist:0,lair:"",phase:0};
+let combatSeconds = 0;
+let combatInterval = setInterval(()=>{combatSeconds++; updateTimer()},1000);
 
-function addCreature() {
-  let name = document.getElementById("name").value;
-  let hp = parseInt(document.getElementById("hp").value);
-  let ac = parseInt(document.getElementById("ac").value);
-  creatures.push({name, hp, ac});
-  render();
+// -------------------- Tabs --------------------
+function openTab(tab){
+document.querySelectorAll('.tab').forEach(t=>t.style.display='none');
+document.getElementById(tab).style.display='block';
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+event.target.classList.add('active');
 }
 
-function nextTurn() {
-  if (creatures.length === 0) return;
-  turn++;
-  if (turn >= creatures.length) {
-    turn = 0;
-    round++;
-    document.getElementById("round").innerText = round;
-  }
-  render();
+// -------------------- Combat Timer --------------------
+function updateTimer(){
+let mins=Math.floor(combatSeconds/60).toString().padStart(2,'0');
+let secs=(combatSeconds%60).toString().padStart(2,'0');
+document.getElementById('combatTimer').innerText=`${mins}:${secs}`;
+document.getElementById('statTime').innerText=`${mins}:${secs}`;
 }
 
-function damage(index) {
-  let dmg = prompt("Enter damage:");
-  if (!dmg) return;
-  creatures[index].hp -= parseInt(dmg);
-  if (creatures[index].hp < 0) creatures[index].hp = 0;
-  render();
+// -------------------- Creature Management --------------------
+function addPlayer(){
+let name=p_name.value; let hp=parseInt(p_hp.value);
+let ac=parseInt(p_ac.value); let pp=parseInt(p_pp.value)||0;
+creatures.push({name,hp,max:hp,ac,pp,type:"Player",conditions:[],reaction:false,concentration:false});
+renderAll();
+}
+function addEnemy(){
+let name=e_name.value; let hp=parseInt(e_hp.value);
+let ac=parseInt(e_ac.value); let init=parseInt(e_init.value)||0;
+creatures.push({name,hp,max:hp,ac,init,type:"Enemy",conditions:[],reaction:false,concentration:false});
+creatures.sort((a,b)=>b.init-a.init);
+renderAll();
+}
+function deleteCreature(i){creatures.splice(i,1); renderAll();}
+function cloneCreature(i){
+let c=JSON.parse(JSON.stringify(creatures[i]));
+c.name+= " Copy";
+creatures.push(c);
+renderAll();
+}
+function damage(i){
+let dmg=parseInt(prompt("Damage?")); if(!dmg) return;
+creatures[i].hp-=dmg; if(creatures[i].hp<0) creatures[i].hp=0;
+renderAll();
+}
+function heal(i){
+let val=parseInt(prompt("Heal?")); if(!val) return;
+creatures[i].hp+=val; if(creatures[i].hp>creatures[i].max) creatures[i].hp=creatures[i].max;
+renderAll();
 }
 
-function render() {
-  let container = document.getElementById("creatures");
-  container.innerHTML = "";
-  creatures.forEach((c, i) => {
-    container.innerHTML += `
-      <div class="card ${i === turn ? 'current' : ''}">
-        <strong>${c.name}</strong><br>
-        HP: ${c.hp} | AC: ${c.ac}<br>
-        <button onclick="damage(${i})">Damage</button>
-      </div>
-    `;
-  });
+// -------------------- Turn & Round --------------------
+function nextTurn(){
+turn++; if(turn>=creatures.length){turn=0; round++;}
+document.getElementById('round').innerText=round;
+document.getElementById('statRounds').innerText=round;
+renderAll();
 }
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
+// -------------------- Boss --------------------
+function setBoss(){
+boss.legendary=parseInt(legendary.value)||0;
+boss.resist=parseInt(resist.value)||0;
+boss.lair=lair.value;
+boss.phase=parseInt(phase.value)||0;
+bossPanel.innerHTML=`Legendary Actions: ${boss.legendary}<br>
+Legendary Resistances: ${boss.resist}<br>
+Lair: ${boss.lair}<br>
+Phase Alert at ${boss.phase}% HP`;
 }
+
+// -------------------- Dice Roller --------------------
+function rollDice(){
+let type=parseInt(diceType.value); let mod=parseInt(modifier.value)||0;
+let adv=document.getElementById('adv').checked;
+let dis=document.getElementById('dis').checked;
+let roll1=Math.floor(Math.random()*type)+1;
+let roll2=Math.floor(Math.random()*type)+1;
+let result;
+if(adv) result=Math.max(roll1,roll2);
+else if(dis) result=Math.min(roll1,roll2);
+else result=roll1;
+result+=mod;
+diceResult.innerText=result;
+diceHistory.innerHTML=`Last Rolls: ${roll1}, ${roll2} + ${mod}`;
+}
+
+// -------------------- Conditions --------------------
+function toggleCondition(c,i){
+let arr=creatures[i].conditions;
+if(arr.includes(c)) arr.splice(arr.indexOf(c),1);
+else arr.push(c);
+renderAll();
+}
+
+// -------------------- Notes --------------------
+function saveNotes(){localStorage.setItem('sessionNotes',document.getElementById('sessionNotes').value);}
+document.getElementById('sessionNotes').value=localStorage.getItem('sessionNotes')||"";
+
+// -------------------- Render --------------------
+function renderAll(){
+let html=""; creatures.forEach((c,i)=>{
+let classes="card"; if(i===turn) classes+=" current"; if(c.hp<=c.max/2) classes+=" bloodied"; if(c.hp<=0) classes+=" dead";
+let hpPercent=Math.max(0,(c.hp/c.max)*100);
+html+=`<div class="${classes}">
+<strong>${c.name}</strong> (${c.type})<br>
+HP: <div class="hp-bar"><div class="hp-fill" style="width:${hpPercent}%"></div></div>
+${c.hp}/${c.max} | AC: ${c.ac} | PP: ${c.pp}<br>
+<button onclick="damage(${i})">Damage</button>
+<button onclick="heal(${i})">Heal</button>
+<button onclick="cloneCreature(${i})">Clone</button>
+<button onclick="deleteCreature(${i})">Delete</button>
+<br>Reaction: <input type="checkbox" ${c.reaction?'checked':''} onclick="c.reaction=!c.reaction;renderAll();">
+Concentration: <input type="checkbox" ${c.concentration?'checked':''} onclick="c.concentration=!c.concentration;renderAll();"><br>
+Conditions: ${["P","R","S","F","G","C"].map(cond=>`<span class="condition" onclick="toggleCondition('${cond}',${i})">${cond}</span>`).join(' ')}
+</div>`;
+});
+initiativeList.innerHTML=html;
+playerList.innerHTML=html;
+enemyList.innerHTML=html;
+statCreatures.innerText=creatures.length;
+}
+
+renderAll();
 </script>
 
 </body>
-</html>
+  </html>
