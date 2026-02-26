@@ -1,0 +1,9 @@
+{
+  "name": "One-Shot Combat Commander",
+  "short_name": "CombatDM",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f0f14",
+  "theme_color": "crimson",
+  "icons": []
+}
